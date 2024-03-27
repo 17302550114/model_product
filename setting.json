@@ -1,0 +1,30 @@
+{
+    
+	"db_mysql_local": {
+		"prefix":"mysql",
+		"host": "47.98.243.35",
+		"user": "root",
+		"password": "geng123456",
+		"port": 3306,
+		"database": "model_product"
+	},
+    
+	"db_mysql_2": {
+		"prefix":"mysql",
+		"host": "47.98.243.35",
+		"user": "root",
+		"password": "geng123456",
+		"port": 3306,
+		"database": "test"
+	},
+    
+	"db_oracle": {
+		"prefix":"oracle+cx_oracle",
+		"host": "127.0.0.1",
+		"user": "system",
+		"password": "geng",
+		"port": 1521,
+		"database": "c##model_product"
+	},
+    "sys_setting":{"project_base_path":"/home/zhxz_model/"}
+}
