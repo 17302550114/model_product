@@ -21,6 +21,7 @@ now = datetime.datetime.now()
 model_path = '轨迹相关/'
 file_path =  PROJECT_BASE_PATH +  '/model_product/logs/' + model_path
 my_logger(file_path,"更新人员全量轨迹.log")
+
 def error(error):
     print(error)
     pass

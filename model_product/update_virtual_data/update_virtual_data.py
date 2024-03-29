@@ -26,6 +26,8 @@ conn_mysql = db_conn_init("db_mysql_local")
 now = datetime.datetime.now()
 file_path = os.path.dirname(__file__) + '/logs/'
 my_logger(file_path,"更新模拟数据.log")
+
+
 def update_ry_jbxx(num=10):
     list_ = []
     list_rylb = ["常住人口","常住人口","常住人口","常住人口","常住人口",'暂住人口','暂住人口','流动人口']
@@ -68,6 +70,8 @@ def update_aj_jbxx(num=50):
         dict_['wd'] = random.uniform(31,33)
         list_.append(dict_)
     data_aj_jbxx = pd.DataFrame(list_)
+    data_aj_jbxx['fasjsx'] = data_aj_jbxx['fasjsx'].apply(format_sj)
+    data_aj_jbxx['fasjxx'] = data_aj_jbxx['fasjxx'].apply(format_sj)
     data_aj_jbxx["rksj"] = str(datetime.datetime.now())[0:19]
     write2db(data_aj_jbxx,'aj_jbxx',mode='w+',conn=conn_mysql)
     print_info(f"新增{data_aj_jbxx.shape[0]}条案件基本信息数据")
@@ -114,6 +118,7 @@ def update_rx_gj(num=1000):
         dict_["passtime"] = faker.date_time_between(now + datetime.timedelta(hours=-2),now)
         list_.append(dict_)
     data_gj_rx = pd.DataFrame(list_)
+    data_gj_rx['passtime'] = data_gj_rx['passtime'].apply(format_sj)
     data_gj_rx["rksj"] = str(datetime.datetime.now())[0:19]
     write2db(data_gj_rx,'gj_rxgj',mode='w+',conn=conn_mysql)
     print_info(f"新增{data_gj_rx.shape[0]}条人像轨迹数据")
@@ -134,6 +139,7 @@ def update_cl_gj(num=100):
         dict_["passtime"] = faker.date_time_between(parser.parse("2024-01-01"),parser.parse('2024-03-20'))
         list_.append(dict_)
     data_gj_clxx = pd.DataFrame(list_)
+    data_gj_clxx['passtime'] = data_gj_clxx['passtime'].apply(format_sj)
     data_gj_clxx["plateno"] = data_gj_clxx["userid"].map(dict_plateno)
     data_gj_clxx["plateno"] = data_gj_clxx["plateno"].apply(lambda x:faker.license_plate() if pd.isna(x) else x)
     data_gj_clxx["rksj"] = str(datetime.datetime.now())[0:19]
@@ -174,6 +180,8 @@ def update_gj_lgzs(num=100):
         dict_["roomnum"] = guestoge[-4:]
         list_.append(dict_)
     data_ry_jbxx = pd.DataFrame(list_)
+    data_ry_jbxx['checkintime'] = data_ry_jbxx['checkintime'].apply(format_sj)
+    data_ry_jbxx['checkouttime'] = data_ry_jbxx['checkouttime'].apply(format_sj)
     # 把入住人数大于4个的去掉
     data_rs = data_ry_jbxx.groupby(by=["guestogeid"])["userid"].agg(lambda x: len(set(x))).to_frame().reset_index()
     count_rs = data_rs[data_rs["userid"]<4]

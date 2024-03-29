@@ -43,6 +43,7 @@ def gen_qksl(df):
     return result_3
 
 def gen_ry_jbxx(df):
+    
     tmp_table_name = 'df2wcnjbxx' + str(np.random.random())[2:10]
     sql=f'''
         SELECT sfz.userid,name xm,ry.rylb,xzzxz,fwcs,phone,zw,plateno from {tmp_table_name} sfz

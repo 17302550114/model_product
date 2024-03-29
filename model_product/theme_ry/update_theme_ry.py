@@ -86,7 +86,6 @@ def getWCN_XYR(sjsx='',sjxx=''):
     本地库前科未成年["data_source"] = '本地嫌疑人库'
     本地库前科未成年["ryksj"] = 本地库前科未成年["zhrq"].apply(format_sj)
     本地库前科未成年["rztksj"] =  str(datetime.datetime.now())[0:19]
-    本地库前科未成年["fh_rksj"] =  str(datetime.datetime.now())[0:19]
     print(本地库前科未成年)
     write2db(本地库前科未成年,"theme_ry",mode='w+',conn=conn_mysql)
     print_info(f"查询本地嫌疑人库时间范围:{sjsx}-{sjxx},结果数:{本地库前科未成年.shape[0]}")

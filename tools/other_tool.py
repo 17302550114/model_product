@@ -181,13 +181,14 @@ def prosess_whcd(x):
 
 def format_sj(x):
     try:
+        x = str(x)
         sj = parser.parse(x)
     except Exception as e:
         try:
             sj = parser.parse(time.strftime('%Y%m%d%H%M%S',time.localtime(int(x))))
         except Exception as e:
             sj = ''
-    return str(sj)
+    return str(sj)[0:19]
 
 def hav(theta):
     s = sin(theta/2)
