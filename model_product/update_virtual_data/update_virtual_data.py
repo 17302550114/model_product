@@ -190,6 +190,76 @@ def update_gj_lgzs(num=100):
     write2db(data_gj_lgzs,'gj_lgzs',mode='w+',conn=conn_mysql)
     print_info(f"新增{data_gj_lgzs.shape[0]}条旅馆住宿数据")
 
+def update_gj_tlcx(num=100):
+    data_ry = get_data_from_db(sql="select userid from ry_jbxx",conn=conn_mysql)
+    list_ry = list(set(data_ry["userid"]))
+    with open('city_str.txt', 'r') as file:
+        str_city = file.read()
+    str_city = str_city.replace('\n','')
+    str_city = re.subn("\d、",'',str_city)[0]
+    list_city_1 = re.findall("、(.*?)市",str_city)
+    list_city_2 = re.findall("个(.*?)市",str_city)
+    list_city = list_city_1 + list_city_2 + ['南京'] * 115
+
+    def gen_tltxid():
+        str_togeid =re.sub('-| |:','',str(faker.date_time_between(now+datetime.timedelta(days=-31),now))[0:10])
+        str_togeid = str(str_togeid) + '_' + random.choice(list_city) + '_' + random.choice(list_city)
+        str_togeid = str_togeid  + '_' + "G" + ''.join([str(random.choice(range(1,9))) for i in range(3)])
+        str_togeid = str_togeid + '_' + str(random.choice([0,1]))+ str(random.choice(range(1,7))) 
+        return str_togeid
+    list_ = []
+    list_guestogeid = [gen_tltxid() for i in range(num//2)]
+    list_zwh = [str(random.choice([0,1]))+ str(random.choice(range(1,7))) + random.choice(["A",'B','C','D','F']) for i in range(num)]  
+    list_zwh = set(list_zwh)
+    for i in range(num):
+        dict_ = {}
+        list_ry.append(faker.ssn())
+        dict_["userid"] = random.choice(list_ry)
+        guestoge = random.choice(list_guestogeid)
+        list_txid =  guestoge.split('_')
+        dict_["fcrq"] = list_txid[0]
+        dict_["cfz"] = list_txid[1]
+        dict_["ddz"] = list_txid[2]
+        dict_["cc"] = list_txid[3]
+        dict_["cxhm"] = list_txid[4]
+        # zwh = random.choice(list(list_zwh))
+        # list_zwh.discard(zwh)
+        dict_["zwh"] = str(random.choice([0,1]))+ str(random.choice(range(1,7))) + random.choice(["A",'B','C','D','F'])
+        list_.append(dict_)
+    data_ry_jbxx = pd.DataFrame(list_)
+    data_ry_jbxx = data_ry_jbxx.drop_duplicates(subset=['fcrq','cfz','ddz','cc','cxhm','zwh'])
+    data_ry_jbxx = data_ry_jbxx.sort_values(by=['cc'])
+    data_ry_jbxx["rksj"] = str(datetime.datetime.now())[0:19]
+    write2db(data_ry_jbxx,'gj_tlcx',mode='w+',conn=conn_mysql)
+    print_info(f"新增{data_ry_jbxx.shape[0]}条铁路出行数据")
+
+def update_gj_wbsw(num=100):
+    data_device = get_data_from_db(sql="select device_id from device_jbxx where device_type='网吧'",conn=conn_mysql)
+    list_device = list(set(data_device["device_id"]))
+    data_ry = get_data_from_db(sql="select userid from ry_jbxx",conn=conn_mysql)
+    list_ry = list(set(data_ry["userid"]))
+    list_ = []
+    num = 1000
+    for i in range(num):
+        dict_ = {}
+        list_ry.append(faker.ssn())
+        dict_["userid"] = random.choice(list_ry)
+        guestoge = random.choice(list_device)
+        dict_["wbbh"] = guestoge
+        sjsj = str(faker.date_time_between(now+datetime.timedelta(days=-31),now))[0:19]
+        xjsj = parser.parse(str(sjsj)) + datetime.timedelta(hours=random.choice([random.randint(1,5)]*5  + [random.randint(6,12)]*5 ))
+        dict_["sjsj"] = str(sjsj)
+        dict_["xjsj"] = str(xjsj)
+        if xjsj>now:
+            continue
+        dict_["jqh"] =''.join([str(faker.random_digit()) for i in range(3)])
+        list_.append(dict_)
+    data_ry_jbxx = pd.DataFrame(list_)
+    data_ry_jbxx["rksj"] = str(datetime.datetime.now())[0:19]
+    write2db(data_ry_jbxx,'gj_wbsw',mode='w+',conn=conn_mysql)
+    print_info(f"新增{data_ry_jbxx.shape[0]}条网吧上网数据")
+
+
 if __name__ == '__main__':
     print_info("*"*100)
     pool = Pool(10)
@@ -199,6 +269,9 @@ if __name__ == '__main__':
     result_gj_rxgj = pool.apply_async(func=update_rx_gj,args=(), error_callback=error)
     result_gj_clgj = pool.apply_async(func=update_cl_gj,args=(), error_callback=error)
     result_gj_lgzs = pool.apply_async(func=update_gj_lgzs,args=(), error_callback=error)
+    result_gj_tlcx = pool.apply_async(func=update_gj_tlcx,args=(), error_callback=error)
+    result_gj_wbsw = pool.apply_async(func=update_gj_wbsw,args=(), error_callback=error)
+
     pool.close()
     pool.join()
     print_info("数据更新完毕")
