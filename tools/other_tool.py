@@ -72,7 +72,7 @@ def my_logger(file_path,log_name):
     logger.setLevel(logging.INFO)
     
     log_name = file_path + log_name
-    print("日志路径",log_name)
+    # print("日志路径",log_name)
     if not os.path.exists(file_path):
         os.mkdir(file_path)
         try:

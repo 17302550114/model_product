@@ -3,9 +3,7 @@ import os
 import sys
 import datetime
 import pandas as pd
-
 sys.path.append(os.getcwd())
-print("当前工作路径",os.getcwd())
 from tools.other_tool import *
 from model_op.op_track import *
 from sql_conn import *
@@ -16,7 +14,6 @@ now = datetime.datetime.now()
 model_path = '标签相关/'
 file_path =   PROJECT_BASE_PATH  + '/model_product/logs/' + model_path
 my_logger(file_path,"更新标签_昼伏夜出_夜间出行.log")
-
 
 
 if __name__ == '__main__':

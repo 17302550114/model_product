@@ -4,7 +4,6 @@ import datetime
 import pandas as pd
 
 sys.path.append(os.getcwd())
-print("当前工作路径",os.getcwd())
 from tools.other_tool import *
 
 from sql_conn import *
