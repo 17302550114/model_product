@@ -54,7 +54,6 @@ def opTrackZFYC(list_track_sj:list=[],list_thred_time:list=[6,22])->tuple:
     return gj_days,zfyc_days
 
 
-
 def opTrackYJCX(list_track_sj:list=[],list_conditon:list=[6,22])->tuple:
     """计算夜间出行
     Args:

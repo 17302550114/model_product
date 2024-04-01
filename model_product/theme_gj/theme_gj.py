@@ -37,7 +37,6 @@ def is_Success(dict_,x):
     return result
 
 def gen_rel_rxtx(data_gj):
-    print(data_gj)
     data_to_jc_rel = data_gj.copy()
     data_to_jc_rel.columns = ["rel_" + i for i in data_to_jc_rel.columns]
     data_to_jc_rel = data_to_jc_rel.rename(columns={"rel_gj_location_id":"gj_location_id"})
@@ -45,7 +44,6 @@ def gen_rel_rxtx(data_gj):
     result_jc = result_jc[result_jc.apply(lambda x: x.userid!=x.rel_userid,axis=1)]
     if result_jc.empty:
         return pd.DataFrame()
-    print(result_jc)
 
     result_jc["dif_days"] = result_jc.progress_apply(lambda x:  (parser.parse(x.gj_sj)- parser.parse(x.rel_gj_sj)).days,axis=1)
     result_jc["dif_seconds"] = result_jc.progress_apply(lambda x:  round((parser.parse(x.gj_sj)- parser.parse(x.rel_gj_sj)).seconds),axis=1)
@@ -67,7 +65,6 @@ def get_gj_rx(list_sfz,sjsx,sjxx,mode='query',task_id='000'):
     sjsx = format_sj(sjsx)
     sjxx = format_sj(sjxx)
     df_sfz = pd.DataFrame(data=list_sfz,columns=['userid'])
-    print("查询模式",mode)
     tmp = pd.DataFrame()
     if mode=='query':
         tmp_table_name = "zdry_gj_tmp"+ str(np.random.random())[2:10]
@@ -88,15 +85,13 @@ def get_gj_rx(list_sfz,sjsx,sjxx,mode='query',task_id='000'):
             left join device_jbxx device on device.device_id = gj.device_id
             where gj.rksj >= '{sjsx}' and gj.rksj<='{sjxx}'
         '''
-        print(sql)
         data_gj = get_data_from_db(sql=sql,conn=conn_mysql)
-        print(f"时间范围内人像轨迹数：{data_gj.shape[0]}")
         tmp = df_sfz.merge(data_gj,on=['userid'])
         
     if tmp.empty:
         print("人像轨迹数据为空")
         result = pd.DataFrame(data=[{"gj_type":"人像轨迹","task_id":task_id}])
-        return pd.DataFrame()
+        return [pd.DataFrame()] * 2
     print(f"有人像轨迹数据{tmp.shape[0]}")
     tmp['gj_sj'] = tmp['passtime'].apply(format_sj)
     tmp['gj_location'] = tmp['device_address']
@@ -107,7 +102,8 @@ def get_gj_rx(list_sfz,sjsx,sjxx,mode='query',task_id='000'):
     result_rxgj = tmp[['userid','gj_sj','gj_location','gj_xq','gj_location_id','jd','wd']]
     result_rxgj['gj_type']='人像轨迹'
     # 计算人像同行
-    
+    print_info(f"旅馆住宿轨迹数:{result_rxgj.shape[0]}")
+    print_info(f"旅馆同住轨迹数:{result_rxtx.shape[0]}")
     return [result_rxgj,result_rxtx]
 
 
@@ -148,11 +144,9 @@ def gen_rel_lgtz(data_gj,time_delta=15):
 
 def get_gj_lg(list_sfz,sjsx,sjxx,mode='query',task_id='000'):
     conn_mysql = db_conn_init("db_mysql_local")
-    print(sjsx,sjxx)
     sjsx = format_sj(sjsx)
     sjxx = format_sj(sjxx)
     df_sfz = pd.DataFrame(data=list_sfz,columns=['userid'])
-    print("查询模式",mode)
     tmp = pd.DataFrame()
     if mode=='query':
         tmp_table_name = "zdry_gj_tmp"+ str(np.random.random())[2:10]
@@ -176,9 +170,9 @@ def get_gj_lg(list_sfz,sjsx,sjxx,mode='query',task_id='000'):
         data_gj = get_data_from_db(sql=sql,conn=conn_mysql)
         tmp = df_sfz.merge(data_gj,on=['userid'])
     if tmp.empty:
-        print("人像轨迹数据为空")
+        print("旅馆轨迹数据为空")
         result = pd.DataFrame(data=[{"gj_type":"人像轨迹","task_id":task_id}])
-        return pd.DataFrame()
+        return [pd.DataFrame(),pd.DataFrame()]
     print(f"有旅馆住宿轨迹数据{tmp.shape[0]}")
     tmp['gj_sj'] = tmp['checkintime'].apply(format_sj)
     tmp['gj_sj_r'] = tmp['checkouttime'].apply(format_sj)
@@ -188,8 +182,93 @@ def get_gj_lg(list_sfz,sjsx,sjxx,mode='query',task_id='000'):
     result_lgtz = gen_rel_lgtz(tmp)
     result_gj = tmp[['userid','gj_sj','gj_sj_r','gj_location','gj_xq','gj_location_id','jd','wd']]
     result_gj['gj_type']='旅馆住宿'
-    return result_gj,result_lgtz
+    print_info(f"旅馆住宿轨迹数:{result_gj.shape[0]}")
+    print_info("旅馆同住轨迹数:{result_lgtz.shape[0]}")
+    return [result_gj,result_lgtz]
 
+def get_gj_tl(list_sfz,sjsx,sjxx,mode='query',task_id='000'):
+    print(sjsx,sjxx)
+    sjsx = format_sj(sjsx)[0:10]
+    sjxx = format_sj(sjxx)[0:10]
+    df_sfz = pd.DataFrame(data=list_sfz,columns=['userid'])
+    tmp = pd.DataFrame()
+    if mode=='query':
+        tmp_table_name = "zdry_gj_tl_tmp"+ str(np.random.random())[2:10]
+        sql_tl_dp=f'''
+            SELECT gj.userid,gj.cc,gj.fcrq,
+            gj.cfz,gj.ddz,gj.cxhm,gj.zwh
+            from {tmp_table_name} ry
+            inner join gj_tlcx gj  on gj.userid = ry.userid
+            where fcrq >= '{sjsx}' and fcrq<='{sjxx}'
+        '''
+        tmp = get_data_from_db_by_tmp(tmp_table=df_sfz,tmp_table_name=tmp_table_name,sql=sql_tl_dp,conn=conn_mysql)
+    if mode == 'monitor':
+        sql = f'''
+            SELECT gj.userid,gj.cc,gj.fcrq,
+            gj.cfz,gj.ddz,gj.cxhm,gj.zwh
+            from gj_tlcx gj
+            where gj.fcrq >= '{sjsx}' and gj.fcrq<='{sjxx}'
+        '''
+        data_gj = get_data_from_db(sql=sql,conn=conn_mysql)
+        tmp = df_sfz.merge(data_gj,on=['userid'])
+        
+    if tmp.empty:
+        print("铁路轨迹数据为空")
+        result = pd.DataFrame(data=[{"gj_type":"铁路轨迹","task_id":task_id}])
+        return [pd.DataFrame(),pd.DataFrame()]
+    tmp['gj_sj'] = tmp['fcrq'].apply(lambda x: format_sj(x)[0:10] )
+    tmp['gj_location'] = tmp['cfz']
+    tmp['gj_location_r'] = tmp['ddz']
+    tmp['gj_location_id'] = ''
+    tmp['gj_xq'] = tmp.apply(lambda x: str(x.cxhm) + '_' +str(x.zwh) ,axis=1)
+    result_gj_tl = tmp[['userid','gj_sj','gj_location','gj_xq','gj_location_id','gj_location_r',]]
+    result_gj_tl['gj_type']='铁路出行'
+    # 计算铁路同行
+    result_rxtx = gen_rel_tltx(tmp)
+    print_info(f"铁路出行轨迹数:{result_gj_tl.shape[0]}",)
+    print_info(f"铁路同行轨迹数:{result_rxtx.shape[0]}",)
+    return [result_gj_tl,result_rxtx]
+
+def gen_rel_tltx(data_gj):
+    data_to_jc_rel = data_gj.copy()
+    # 计算两种关系：同车厢出行；相邻座位（座位号相差小于2）出行 
+    df_tl_tx_tcx = pd.DataFrame()
+    df_tl_tx_xlzw = pd.DataFrame()
+    for i in tqdm(data_to_jc_rel.itertuples(),total=data_to_jc_rel.shape[0],postfix='铁路同行'):
+        quer_userid  =  i.userid
+        zwh = i.zwh
+        if pd.isna(i.cxhm):
+            continue
+        condition = f"FCRQ='{i.fcrq}' and cc='{i.cc}' and cfz='{i.cfz}' and ddz ='{i.ddz}' and CXHM='{i.cxhm}'"
+        sql = f'''
+            select userid,fcrq,cc,cfz,ddz,cxhm,zwh from gj_tlcx where {condition}
+        '''
+        tmp_tx = get_data_from_db(sql=sql,conn=conn_mysql)
+        if tmp_tx.empty:
+            continue
+        tmp_tx = tmp_tx[tmp_tx.apply(lambda x: x.userid != quer_userid,axis=1)]
+        tmp_tx["quer_userid"] = quer_userid
+        tmp_tx["rel_sj"] = i.fcrq
+        tmp_tx["rel_location"] = tmp_tx["cfz"]
+        tmp_tx["rel_location_r"] = tmp_tx["ddz"]
+        tmp_tx["rel_type"] = "铁路同行_同车厢"
+        tmp_tx['rel_userid'] = tmp_tx['userid']
+        tmp_tx['rel_xq'] = tmp_tx.apply(lambda x: str(x.cxhm)+'_' + str(zwh) + '_' +str(x.zwh) ,axis=1)
+        df_tl_tx_tcx = df_tl_tx_tcx.append(tmp_tx)
+        def get_zwhm_limit(x1,x2):
+            zwhm_1 = re.findall("\d+",x1)
+            zhhm_2 = re.findall('\d+',x2)
+            if zwhm_1==[] or zhhm_2==[]:
+                return False
+            if abs(int(zwhm_1[0])-int(zhhm_2[0]))<=1:
+                    return True
+            return False
+        tmp_tx_xlzw = tmp_tx[tmp_tx.apply(lambda x:  get_zwhm_limit(zwh,x.zwh),axis=1)]
+        tmp_tx_xlzw["rel_type"] = "铁路同行_相邻座位"
+        df_tl_tx_xlzw  = df_tl_tx_xlzw.append(tmp_tx_xlzw)
+    df_tl_tx = df_tl_tx_tcx.append(df_tl_tx_xlzw)
+    result_tl_tx = df_tl_tx[["quer_userid",'rel_userid','rel_sj','rel_type','rel_location','rel_location_r','rel_xq']]
+    return result_tl_tx
 
 
 if __name__ == '__main__':
@@ -202,6 +281,7 @@ if __name__ == '__main__':
     sjsx = str(today + datetime.timedelta(days = -0,hours=-1)) # 
     sjxx = str(today + datetime.timedelta(days = 0,hours=0)) #
     task_id = '000'
+    mode = 'monitor'
     print_info(f"重点人员轨迹查询：开始时间:{str(datetime.datetime.now())},查询人数:{len(list_userid)},查询轨迹时间范围:{sjsx}-{sjxx}")
     ceil = 1000
     df_result_gj = pd.DataFrame()
@@ -209,30 +289,31 @@ if __name__ == '__main__':
     for index,list_sfz in tqdm(enumerate(block_list(list_userid,n=ceil)),total = len(list_userid)/ceil):
         # 并行分析
         pool = Pool(10)
-        result_rx = pool.apply_async(func=get_gj_rx,args=(list_sfz,sjsx,sjxx,"monitor"), error_callback=error)
-        result_lg = pool.apply_async(func=get_gj_lg,args=(list_sfz,sjsx,sjxx,"monitor"), error_callback=error)
+        result_rx = pool.apply_async(func=get_gj_rx,args=(list_sfz,sjsx,sjxx,mode), error_callback=error)
+        result_lg = pool.apply_async(func=get_gj_lg,args=(list_sfz,sjsx,sjxx,mode), error_callback=error)
+        result_tl = pool.apply_async(func=get_gj_tl,args=(list_sfz,sjsx,sjxx,mode), error_callback=error)
         pool.close()
         pool.join()
         dict_gj = {
             "result_rx":result_rx,
-            "result_lg":result_lg
+            "result_lg":result_lg,
+            'result_tl':result_tl
           }
-        print("数据类型结果字典",dict_gj)
         list_result = [dict_gj.get(i).get()[0] for i in dict_gj.keys() if is_Success(dict_gj,i)]
         result_all_gj = reduce(lambda x,y:x.append(y),list_result)
         df_result_gj = df_result_gj.append(result_all_gj)
         list_result_rel = [dict_gj.get(i).get()[1] for i in dict_gj.keys() if is_Success(dict_gj,i)]
         result_all_rel = reduce(lambda x,y:x.append(y),list_result_rel)
         df_result_rel = df_result_rel.append(result_all_rel)
-        print(df_result_gj)
-        print(df_result_rel)
-    print("分析完成")
+    print("所有轨迹结果条数",df_result_gj.shape[0])
+    print("所有关系结果",df_result_rel.shape[0])
     df_result_gj["task_id"]=task_id
     df_result_gj["rksj"]= str(datetime.datetime.now())[0:19]
     write2db(df_result_gj,'theme_gj',mode='w+',conn=conn_mysql)
     print_info(f"重点人员轨迹查询：结束时间:{str(datetime.datetime.now())},结果数:{df_result_gj.shape[0]}")
     df_result_rel["task_id"]=task_id
     df_result_rel["rksj"]= str(datetime.datetime.now())[0:19]
+    conn_mysql = db_conn_init("db_mysql_local")
     write2db(df_result_rel,'theme_gj_rel',mode='w+',conn=conn_mysql)
     print_info(f"重点人员轨迹关系查询：结束时间:{str(datetime.datetime.now())},结果数:{df_result_rel.shape[0]}")
     conn_mysql.dispose()

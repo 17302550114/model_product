@@ -202,7 +202,7 @@ def update_gj_tlcx(num=100):
     list_city = list_city_1 + list_city_2 + ['南京'] * 115
 
     def gen_tltxid():
-        str_togeid =re.sub('-| |:','',str(faker.date_time_between(now+datetime.timedelta(days=-31),now))[0:10])
+        str_togeid =re.sub('-| |:','',str(faker.date_time_between(now+datetime.timedelta(days=-2),now))[0:10])
         str_togeid = str(str_togeid) + '_' + random.choice(list_city) + '_' + random.choice(list_city)
         str_togeid = str_togeid  + '_' + "G" + ''.join([str(random.choice(range(1,9))) for i in range(3)])
         str_togeid = str_togeid + '_' + str(random.choice([0,1]))+ str(random.choice(range(1,7))) 
@@ -217,7 +217,7 @@ def update_gj_tlcx(num=100):
         dict_["userid"] = random.choice(list_ry)
         guestoge = random.choice(list_guestogeid)
         list_txid =  guestoge.split('_')
-        dict_["fcrq"] = list_txid[0]
+        dict_["fcrq"] = format_sj(list_txid[0])[0:10]
         dict_["cfz"] = list_txid[1]
         dict_["ddz"] = list_txid[2]
         dict_["cc"] = list_txid[3]
@@ -230,6 +230,7 @@ def update_gj_tlcx(num=100):
     data_ry_jbxx = data_ry_jbxx.drop_duplicates(subset=['fcrq','cfz','ddz','cc','cxhm','zwh'])
     data_ry_jbxx = data_ry_jbxx.sort_values(by=['cc'])
     data_ry_jbxx["rksj"] = str(datetime.datetime.now())[0:19]
+    data_ry_jbxx = data_ry_jbxx[data_ry_jbxx.apply(lambda x: x.cfz != x.ddz,axis=1)]
     write2db(data_ry_jbxx,'gj_tlcx',mode='w+',conn=conn_mysql)
     print_info(f"新增{data_ry_jbxx.shape[0]}条铁路出行数据")
 

@@ -50,7 +50,8 @@ def getWCN_XYR(sjsx='',sjxx=''):
     print_info(f"查询本地嫌疑人库时间范围:{sjsx}_{sjxx}")
     other_lb = ('1','2')
     sql = f'''
-        select aj.ajbh,xyr.zhrq,xyr.zhdw,xyr.userid
+        select aj.ajbh,aj.jyaq,
+        xyr.zhrq,xyr.zhdw,xyr.userid
         from aj_xyrxx xyr
         inner join aj_jbxx aj on aj.ajbh=xyr.ajbh
         where xyr.zhrq>='{sjsx}' and xyr.zhrq<='{sjxx}' and (aj.ajlb = '盗窃案' or ajlb in  {other_lb}) and aj.slsj is not null
