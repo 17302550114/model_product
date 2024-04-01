@@ -199,7 +199,7 @@ def update_gj_tlcx(num=100):
     str_city = re.subn("\d、",'',str_city)[0]
     list_city_1 = re.findall("、(.*?)市",str_city)
     list_city_2 = re.findall("个(.*?)市",str_city)
-    list_city = list_city_1 + list_city_2 + ['南京'] * 115
+    list_city = list_city_1 + list_city_2 + ['上海'] * 115 + ['南京'] * 75
 
     def gen_tltxid():
         str_togeid =re.sub('-| |:','',str(faker.date_time_between(now+datetime.timedelta(days=-2),now))[0:10])

@@ -18,7 +18,6 @@ from dateutil import parser
 
 def opTrackZFYC(list_track_sj:list=[],list_thred_time:list=[6,22])->tuple:
     """计算昼伏夜出
-    
     Args:
         list_track_sj (list, optional): 轨迹时间列表. Defaults to [].
         list_thred_time (list, optional): 昼/夜定义时刻里列表，默认早6晚22. Defaults to [6,22].
@@ -29,10 +28,10 @@ def opTrackZFYC(list_track_sj:list=[],list_thred_time:list=[6,22])->tuple:
     if list_track_sj == []:
         return None,None
     list_sj = [parser.parse(i) for i in list_track_sj]
-    gj_days = len(set([i.date() for i in list_track_sj]))
+    gj_days = len(set([i.date() for i in list_sj]))
     zfyc_days = 0
     list_track_sj_detail = []
-    for sj in list_track_sj:
+    for sj in list_sj:
         dict_sj = {}
         dict_sj["date"] = sj.date()
         dict_sj["hour"] = sj.hour

@@ -279,7 +279,7 @@ if __name__ == '__main__':
     list_userid = list(set(data_rybh["userid"]))
     today = datetime.datetime.now()  # 当前日期时间
     sjsx = str(today + datetime.timedelta(days = -0,hours=-1)) # 
-    sjxx = str(today + datetime.timedelta(days = 0,hours=0)) #
+    sjxx = str(today + datetime.timedelta(days = -0,hours=0)) #
     task_id = '000'
     mode = 'monitor'
     print_info(f"重点人员轨迹查询：开始时间:{str(datetime.datetime.now())},查询人数:{len(list_userid)},查询轨迹时间范围:{sjsx}-{sjxx}")

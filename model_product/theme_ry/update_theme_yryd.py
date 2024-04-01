@@ -84,7 +84,19 @@ if __name__ == '__main__':
     '''
     data_label_lgtz = get_data_from_db(sql=sql,conn=conn_mysql)
 
-    list_result_label = [data_label_rxtx,data_label_lgtz]
+    sql = '''
+        select userid,1 label_score,'昼伏夜出' as label from theme_label_zfyc
+    '''
+    data_label_zfyc = get_data_from_db(sql=sql,conn=conn_mysql)
+
+    
+    sql = '''
+        select userid,1 label_score,'夜间出行' as label from theme_label_yjcx
+    '''
+    data_label_yjcx = get_data_from_db(sql=sql,conn=conn_mysql)
+
+
+    list_result_label = [data_label_rxtx,data_label_lgtz,data_label_zfyc,data_label_yjcx]
     result_label = reduce(lambda x,y:x.append(y),list_result_label)
 
     result_label["label_score"] = result_label["label_score"].astype('float')
