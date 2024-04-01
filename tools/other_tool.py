@@ -33,7 +33,7 @@ from collections import namedtuple
 import sqlite3
 import difflib
 from base64 import b64decode
-from  tools.admin_div_of_china.adoc import *
+from tools.admin_div_of_china.adoc import *
 
 with open('/home/zhxz_model/setting.json') as j:
     settings = json.load(j)
