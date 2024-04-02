@@ -81,6 +81,8 @@ if __name__ == '__main__':
         union all
         select userid,1 label_score,'频繁入住' as label from theme_label_pfrz
         union all
+        select userid,1 label_score,'夜间入住' as label from theme_label_yjrz
+        union all
         select userid,1 label_score,'昼伏夜出' as label from theme_label_zfyc
         union all
         select userid,1 label_score,'夜间出行' as label from theme_label_yjcx
