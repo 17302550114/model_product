@@ -71,3 +71,27 @@ def opTrackYJCX(list_track_sj:list=[],list_conditon:list=[6,22])->tuple:
     cxts = len(set([i.date() for i in list_track_sj]))
     return cxts,yjcx_ts
 
+def opTrackJXCX(list_track_sj:list=[])->tuple:
+    """计算间歇出现：近3天内有轨迹，且除去三天轨迹的其余轨迹，最小差值天数大于60天
+    Args:
+        list_track_sj (list, optional): 轨迹时间列表. Defaults to [].
+    Returns:
+        tuple: 结果元组（非近期轨迹天数,非近期轨迹与近期轨迹最小差值天数），返回结果中最小差值天数不为0的则为间歇出现
+    """
+    # 
+    today = datetime.datetime.now()  # 当前日期时间
+    近期轨迹 = [i for i in list_track_sj if abs((today - parser.parse(i))).days<3]
+    if  近期轨迹 ==[]:
+        return 0,0
+    近期轨迹天数 = len(set([parser.parse(i).date() for i in 近期轨迹]))
+    非近期轨迹 = [i for i in list_track_sj if i  not in 近期轨迹]
+    if  非近期轨迹 ==[]:
+        return 0,999
+    非近期轨迹天数 = len(set([parser.parse(i).date() for i in 非近期轨迹]))
+    # print(f"总轨迹数:{len(list_track_sj)}  ，近期轨迹数:{len(近期轨迹)}，非近期轨迹数:{len(非近期轨迹)}")
+    近期轨迹_min_sj = min(近期轨迹)
+    非近期轨迹_max_sj = max(非近期轨迹)
+    days = (parser.parse(近期轨迹_min_sj) - parser.parse(非近期轨迹_max_sj)).days
+    if days>60:
+        return 非近期轨迹天数,days
+    return 0,0
