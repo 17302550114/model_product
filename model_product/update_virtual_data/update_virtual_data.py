@@ -240,14 +240,13 @@ def update_gj_wbsw(num=100):
     data_ry = get_data_from_db(sql="select userid from ry_jbxx",conn=conn_mysql)
     list_ry = list(set(data_ry["userid"]))
     list_ = []
-    num = 1000
     for i in range(num):
         dict_ = {}
-        list_ry.append(faker.ssn())
+        # list_ry.append(faker.ssn())
         dict_["userid"] = random.choice(list_ry)
         guestoge = random.choice(list_device)
         dict_["wbbh"] = guestoge
-        sjsj = str(faker.date_time_between(now+datetime.timedelta(days=-31),now))[0:19]
+        sjsj = str(faker.date_time_between(now+datetime.timedelta(days=-1),now))[0:19]
         xjsj = parser.parse(str(sjsj)) + datetime.timedelta(hours=random.choice([random.randint(1,5)]*5  + [random.randint(6,12)]*5 ))
         dict_["sjsj"] = str(sjsj)
         dict_["xjsj"] = str(xjsj)

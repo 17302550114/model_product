@@ -270,6 +270,90 @@ def gen_rel_tltx(data_gj):
     result_tl_tx = df_tl_tx[["quer_userid",'rel_userid','rel_sj','rel_type','rel_location','rel_location_r','rel_xq']]
     return result_tl_tx
 
+def get_rel_wbsw(data_gj,time_delta=60):
+    # 同网吧上网:上下机时间有交叉，且上机时间相差不超过1小时，下机时间相差不超过1小时
+    result_t_lgs = pd.DataFrame()
+    for i in data_gj.itertuples():
+        quer_sjsj = str(i.sjsj)
+        quer_xjsj = str(i.xjsj)
+        quer_userid = i.userid
+        gj_location_id = i.gj_location_id
+        jqh= i.jqh
+        condition = f" xjsj>='{quer_sjsj}' and sjsj<='{quer_xjsj}'  and wbbh='{gj_location_id}' and userid != '{quer_userid}'"
+        sql =f'''
+            SELECT gj.userid,gj.wbbh device_id,gj.sjsj,gj.xjsj,gj.jqh,
+            device.device_address,device.jd,device.wd from gj_wbsw gj 
+            left join device_jbxx device on device.device_id = gj.wbbh 
+            where {condition}
+        '''
+        tmp = get_data_from_db(sql=sql,conn=conn_mysql)
+        if tmp.empty:
+            continue
+        tmp['quer_userid'] = quer_userid
+        tmp["rel_userid"] = tmp["userid"]
+        tmp["rel_sj"] = tmp["sjsj"].apply(format_sj)
+        tmp["rel_sj_r"] = tmp["xjsj"].apply(format_sj)
+        tmp["rel_location"] = tmp["device_address"]
+        tmp["rel_location_id"] = tmp["device_id"]
+        tmp['rel_xq'] = tmp["jqh"].apply(lambda x: jqh + '_' + x )
+        tmp["rel_type"] = '同网吧上网'
+        tmp = tmp[tmp.apply(lambda x: x.quer_userid!=x.rel_userid,axis=1)]
+        # 上下机时间相差不超过1小时
+        tmp["dif_sj_days"] = tmp["sjsj"].apply(lambda x: (parser.parse(x)-parser.parse(quer_sjsj)).days)
+        tmp["dif_sj_sec"] = tmp["sjsj"].apply(lambda x: (parser.parse(x)-parser.parse(quer_sjsj)).seconds)
+        tmp["dif_sj_min"] = tmp.apply(lambda x: abs(x.dif_sj_days*24*3600 + x.dif_sj_sec)/60,axis=1)
+
+        tmp["dif_xj_days"] = tmp["xjsj"].apply(lambda x: (parser.parse(str(x))-parser.parse(quer_xjsj)).days)
+        tmp["dif_xj_sec"] = tmp["xjsj"].apply(lambda x: (parser.parse(str(x))-parser.parse(quer_xjsj)).seconds)
+        tmp["dif_xj_min"] = tmp.apply(lambda x: abs(x.dif_xj_days*24*3600 + x.dif_xj_sec)/60,axis=1)
+        tmp = tmp[tmp.apply(lambda x:  abs(x.dif_sj_min)<30 and  abs(x.dif_xj_min)<30,axis=1 )]
+        if tmp.empty:
+            continue
+        result_t_lg = tmp[["quer_userid","rel_userid","rel_sj","rel_location","rel_xq",'rel_type','rel_location_id']]
+        result_t_lgs = result_t_lgs.append(result_t_lg)
+    return result_t_lgs
+
+def get_gj_wbsw(list_sfz,sjsx,sjxx,mode='query',task_id='000'):
+    print(sjsx,sjxx)
+    sjsx = format_sj(sjsx)
+    sjxx = format_sj(sjxx)
+    df_sfz = pd.DataFrame(data=list_sfz,columns=['userid'])
+    tmp = pd.DataFrame()
+    if mode=='query':
+        tmp_table_name = "zdry_gj_tmp"+ str(np.random.random())[2:10]
+        sql_tl_dp=f'''
+            SELECT gj.userid,gj.wbbh device_id,gj.sjsj,gj.xjsj,gj.jqh,
+            device.device_address,device.jd,device.wd
+            from {tmp_table_name} ry
+            inner join gj_wbsw gj  on gj.userid = ry.userid
+            left join device_jbxx device on device.device_id = gj.wbbh
+            where sjsj >= '{sjsx}' and xjsj<='{sjxx}'
+        '''
+        tmp = get_data_from_db_by_tmp(tmp_table=df_sfz,tmp_table_name=tmp_table_name,sql=sql_tl_dp,conn=conn_mysql)
+    if mode == 'monitor':
+        sql = f'''
+            SELECT gj.userid,gj.wbbh device_id,gj.sjsj,gj.xjsj,gj.jqh,
+            device.device_address,device.jd,device.wd
+            from gj_wbsw gj 
+            left join device_jbxx device on device.device_id = gj.wbbh
+            where gj.rksj >= '{sjsx}' and gj.rksj<='{sjxx}'
+        '''
+        data_gj = get_data_from_db(sql=sql,conn=conn_mysql)
+        tmp = df_sfz.merge(data_gj,on=['userid'])
+    if tmp.empty:
+        print("网吧上网轨迹数据为空")
+        return [pd.DataFrame(),pd.DataFrame()]
+    print_info(f"网吧上网轨迹数据{tmp.shape[0]}")
+    tmp['gj_sj'] = tmp['sjsj'].apply(format_sj)
+    tmp['gj_sj_r'] = tmp['xjsj'].apply(format_sj)
+    tmp['gj_location'] = tmp['device_address']
+    tmp['gj_location_id'] = tmp['device_id']
+    tmp['gj_xq'] = tmp["jqh"]
+    result_lgtz = get_rel_wbsw(tmp)
+    print_info(f"网吧同上网轨迹数据{result_lgtz.shape[0]}")
+    result_gj = tmp[['userid','gj_sj','gj_sj_r','gj_location','gj_xq','gj_location_id','jd','wd']]
+    result_gj['gj_type']='网吧上网'
+    return [result_gj,result_lgtz]
 
 if __name__ == '__main__':
     sql = '''
@@ -292,12 +376,15 @@ if __name__ == '__main__':
         result_rx = pool.apply_async(func=get_gj_rx,args=(list_sfz,sjsx,sjxx,mode), error_callback=error)
         result_lg = pool.apply_async(func=get_gj_lg,args=(list_sfz,sjsx,sjxx,mode), error_callback=error)
         result_tl = pool.apply_async(func=get_gj_tl,args=(list_sfz,sjsx,sjxx,mode), error_callback=error)
+        result_wb = pool.apply_async(func=get_gj_wbsw,args=(list_sfz,sjsx,sjxx,mode), error_callback=error)
+
         pool.close()
         pool.join()
         dict_gj = {
             "result_rx":result_rx,
             "result_lg":result_lg,
-            'result_tl':result_tl
+            'result_tl':result_tl,
+            "result_wb":result_wb
           }
         list_result = [dict_gj.get(i).get()[0] for i in dict_gj.keys() if is_Success(dict_gj,i)]
         result_all_gj = reduce(lambda x,y:x.append(y),list_result)
