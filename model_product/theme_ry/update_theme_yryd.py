@@ -76,39 +76,23 @@ if __name__ == '__main__':
     # 关联标签
     sql = '''
         select userid,txrs label_score,'人像同行' as label from theme_label_rxtx
-    '''
-    data_label_rxtx = get_data_from_db(sql=sql,conn=conn_mysql)
-
-    sql = '''
+        union all
         select userid,tzrs label_score,'旅馆同住' as label from theme_label_lgtz
-    '''
-    data_label_lgtz = get_data_from_db(sql=sql,conn=conn_mysql)
-
-    sql = '''
+        union all
+        select userid,1 label_score,'频繁入住' as label from theme_label_pfrz
+        union all
         select userid,1 label_score,'昼伏夜出' as label from theme_label_zfyc
-    '''
-    data_label_zfyc = get_data_from_db(sql=sql,conn=conn_mysql)
-
-    
-    sql = '''
+        union all
         select userid,1 label_score,'夜间出行' as label from theme_label_yjcx
-    '''
-    data_label_yjcx = get_data_from_db(sql=sql,conn=conn_mysql)
-
-    sql = '''
+        union all
         select userid,1 label_score,'频繁上网' as label from theme_label_pfsw
-    '''
-    data_label_pfsw = get_data_from_db(sql=sql,conn=conn_mysql)
-
-    sql = '''
+        union all
         select userid,1 label_score,'间歇出现' as label from theme_label_jxcx
     '''
-    data_label_jxcx = get_data_from_db(sql=sql,conn=conn_mysql)
-
-
-    list_result_label = [data_label_rxtx,data_label_lgtz,data_label_zfyc,data_label_yjcx,data_label_pfsw,data_label_jxcx]
-    result_label = reduce(lambda x,y:x.append(y),list_result_label)
-
+    result_label = get_data_from_db(sql=sql,conn=conn_mysql)
+    # list_result_label = [data_label_rxtx,data_label_lgtz,data_label_zfyc,data_label_yjcx
+    #                      ,data_label_pfsw,data_label_jxcx,data_label_pfrz]
+    # result_label = reduce(lambda x,y:x.append(y),list_result_label)
     result_label["label_score"] = result_label["label_score"].astype('float')
     result_label = result_label.groupby(by=['userid']).agg({"label_score":sum,
                                              "label":lambda x: ','.join(set(x))
@@ -117,7 +101,6 @@ if __name__ == '__main__':
     result_label['label_score'] = result_label['label_score'].apply(lambda x:round(x,2))
     result_2 = result_1.merge(result_label,how='left')
     result_2["label_score"] = result_2["label_score"].fillna(0)
-
     result_2["gxsj"] = str(datetime.datetime.now())[0:19]
     write2db(result_2,'result_yryd',mode='w',conn=conn_mysql)
     print_info(f"更新一人一档完成,人数：{result_2.shape[0]}")
