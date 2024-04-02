@@ -183,7 +183,7 @@ def get_gj_lg(list_sfz,sjsx,sjxx,mode='query',task_id='000'):
     result_gj = tmp[['userid','gj_sj','gj_sj_r','gj_location','gj_xq','gj_location_id','jd','wd']]
     result_gj['gj_type']='旅馆住宿'
     print_info(f"旅馆住宿轨迹数:{result_gj.shape[0]}")
-    print_info("旅馆同住轨迹数:{result_lgtz.shape[0]}")
+    print_info(f"旅馆同住轨迹数:{result_lgtz.shape[0]}")
     return [result_gj,result_lgtz]
 
 def get_gj_tl(list_sfz,sjsx,sjxx,mode='query',task_id='000'):

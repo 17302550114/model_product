@@ -163,7 +163,7 @@ def update_gj_lgzs(num=100):
     list_guestogeid = [gen_guestogeid() for i in range(num//2)] 
     for i in range(num):
         dict_ = {}
-        list_ry.append(faker.ssn())
+        # list_ry.append(faker.ssn())
         dict_["userid"] = random.choice(list_ry)
 
         guestoge = random.choice(list_guestogeid)
