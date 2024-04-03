@@ -34,7 +34,9 @@ if __name__ == '__main__':
     同行人数 = data_rel_rxtx.groupby(by=["userid"]).agg({"rel_userid":lambda x: len(set(x))}).reset_index().sort_values(by=['rel_userid'])
     同行人数.columns=["userid","tzrs"]
     result_lable_rxtx = data_rel_rxtx.merge(同行人数,on=["userid"])
-    result_lable_rxtx["label_rule"] = "与未成年人前科来旅馆同住，标签分数为同行人数"
+    result_lable_rxtx["label"] = "前科同住"
+    result_lable_rxtx["label_score"] =  result_lable_rxtx["tzrs"]
+    result_lable_rxtx["label_rule"] = "与关注人员前科旅馆同住,标签分数为同住人数"
     result_lable_rxtx["rztksj"] = str(datetime.datetime.now())[0:19]
     result_lable_rxtx.columns = [i.lower() for i in result_lable_rxtx.columns]
     write2db(result_lable_rxtx,'theme_label_lgtz',mode='w',conn=conn_mysql)

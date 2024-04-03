@@ -38,6 +38,8 @@ if __name__ == '__main__':
     # thred = np.percentile(result_jxcx['cxts_jq'],(90))
     # result_jxcx =  result_jxcx[result_jxcx.apply(lambda x:  x.cxts_jq>thred ,axis=1)]
     result_jxcx["label"] = "间歇出现"
+    result_jxcx["label_score"] = 1    
+    result_jxcx['label_rule'] = '近3天内有轨迹,除去近3天轨迹无轨迹或前60天无轨迹, 标签分数为1'
     result_jxcx["rztksj"] = str(datetime.datetime.now())[0:19]
     result_jxcx.columns = [i.lower() for i in result_jxcx.columns]
     write2db(result_jxcx,'theme_label_jxcx',mode='w',conn=conn_mysql)

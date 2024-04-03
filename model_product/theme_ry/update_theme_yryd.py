@@ -77,7 +77,7 @@ if __name__ == '__main__':
     sql = '''
         select userid,txrs label_score,'人像同行' as label from theme_label_rxtx
         union all
-        select userid,tzrs label_score,'旅馆同住' as label from theme_label_lgtz
+        select userid,tzrs label_score,'前科同住' as label from theme_label_lgtz
         union all
         select userid,1 label_score,'频繁入住' as label from theme_label_pfrz
         union all

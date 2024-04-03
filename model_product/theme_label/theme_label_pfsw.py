@@ -32,9 +32,12 @@ if __name__ == '__main__':
     data_to_pfkf =  data_gj[data_gj['gj_type'].apply(lambda x: x in list_req_gj_type)]
     data_pfkf = data_to_pfkf.groupby(by=['userid']).agg({'gj_xq':lambda x: len(set(x))}).reset_index()
     data_pfkf = data_pfkf.sort_values(by=['gj_xq'],ascending=False).rename(columns={"gj_xq":"swcs"})
-    thred = np.percentile(data_pfkf['swcs'],(80))
+    pencent = 90
+    thred = np.percentile(data_pfkf['swcs'],(pencent))
     result_pfrz =  data_pfkf[data_pfkf.apply(lambda x:  x.swcs>thred ,axis=1)]
     result_pfrz["label"] = "频繁上网"
+    result_pfrz["label_score"] = 1
+    result_pfrz["label_rule"] = f"在关注人员中取{100-pencent}%最高上网次数人员,标签分数为1" 
     result_pfrz["rztksj"] = str(datetime.datetime.now())[0:19]
     result_pfrz.columns = [i.lower() for i in result_pfrz.columns]
     write2db(result_pfrz,'theme_label_pfsw',mode='w',conn=conn_mysql)

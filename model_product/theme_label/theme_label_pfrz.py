@@ -32,9 +32,12 @@ if __name__ == '__main__':
     data_to_pfkf =  data_gj[data_gj['gj_type'].apply(lambda x: x in list_req_gj_type)]
     data_pfkf = data_to_pfkf.groupby(by=['userid']).agg({'gj_xq':lambda x: len(set(x))}).reset_index()
     data_pfkf = data_pfkf.sort_values(by=['gj_xq'],ascending=False).rename(columns={"gj_xq":"rzcs"})
-    thred = np.percentile(data_pfkf['rzcs'],(80))
+    pencent = 90
+    thred = np.percentile(data_pfkf['rzcs'],(pencent))
     result_pfrz =  data_pfkf[data_pfkf.apply(lambda x:  x.rzcs>thred ,axis=1)]
     result_pfrz["label"] = "频繁入住"
+    result_pfrz["label_score"] = 1
+    result_pfrz["label_rule"] = f"在关注人员中取{100-pencent}%最高入住次数人员,标签分数为1" 
     result_pfrz["rztksj"] = str(datetime.datetime.now())[0:19]
     result_pfrz.columns = [i.lower() for i in result_pfrz.columns]
     write2db(result_pfrz,'theme_label_pfrz',mode='w',conn=conn_mysql)
@@ -48,6 +51,7 @@ if __name__ == '__main__':
     thred = np.percentile(data_yjrz['rzcs'],(80))
     result_yjrz =  data_yjrz[data_yjrz.apply(lambda x:  x.rzcs>thred ,axis=1)]
     result_yjrz["label"] = "夜间入住"
+    result_yjrz["label_rule"] = "夜间23时至第二天凌晨3时之间入住,标签分数为1"    
     result_yjrz["rztksj"] = str(datetime.datetime.now())[0:19]
     result_yjrz.columns = [i.lower() for i in result_yjrz.columns]
     write2db(result_yjrz,'theme_label_yjrz',mode='w',conn=conn_mysql)

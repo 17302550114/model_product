@@ -37,10 +37,12 @@ if __name__ == '__main__':
         dict_['zfyc_rate'] = round(yjcxts/cxts,1)
         list_.append(dict_)
     data_zfyc = pd.DataFrame(list_)
-
-    thred = np.percentile(data_zfyc['zfycts'],(90))
+    pencent = 90
+    thred = np.percentile(data_zfyc['zfycts'],(pencent))
     result_zfyc =  data_zfyc[data_zfyc.apply(lambda x:  x.zfycts>thred and x.zfyc_rate>=0.5,axis=1)]
     result_zfyc["label"] = "昼伏夜出"
+    result_zfyc["label_score"] = 1
+    result_zfyc["label_rule"] = f"白天蛰伏晚上出现活动人员,默认昼夜6时-22时,在关注人员中取{100-pencent}%最高昼伏夜出天数人员,标签分数为1"
     result_zfyc["rztksj"] = str(datetime.datetime.now())[0:19]
     result_zfyc.columns = [i.lower() for i in result_zfyc.columns]
     write2db(result_zfyc,'theme_label_zfyc',mode='w',conn=conn_mysql)
@@ -60,6 +62,8 @@ if __name__ == '__main__':
     thred = np.percentile(data_yjcx['yjcxts'],(90))
     result_yjcx =  data_yjcx[data_yjcx.apply(lambda x:  x.yjcxts>thred and x.yjcx_rate>=0.5,axis=1)]
     result_yjcx["label"] = "夜间出行"
+    result_yjcx["label_score"] = 1
+    result_yjcx["label_rule"] = f"夜间出行活动人员,默认昼夜6时-22时,在关注人员中取{100-pencent}%最高夜间出行天数人员,标签分数为1"
     result_yjcx["rztksj"] = str(datetime.datetime.now())[0:19]
     write2db(result_yjcx,'theme_label_yjcx',mode='w',conn=conn_mysql)
     print_info(f"分析夜间出行完成,结果数:{result_yjcx.shape[0]}")
